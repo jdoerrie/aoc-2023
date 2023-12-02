@@ -6,17 +6,27 @@ struct Bag {
     blue: usize,
 }
 
+impl Bag {
+    fn new() -> Bag {
+        Bag {
+            red: 0,
+            green: 0,
+            blue: 0,
+        }
+    }
+
+    fn pow(&self) -> usize {
+        self.red * self.green * self.blue
+    }
+}
+
 struct Game {
     id: isize,
     bags: Vec<Bag>,
 }
 
 fn parse_bag(line: &str) -> Bag {
-    let mut bag = Bag {
-        red: 0,
-        green: 0,
-        blue: 0,
-    };
+    let mut bag = Bag::new();
 
     for cube in line.split(", ") {
         let (n, color) = cube.split_once(' ').unwrap();
@@ -58,8 +68,22 @@ pub fn part_one(input: &str) -> Option<isize> {
     )
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+fn max_bag(game: &Game) -> Bag {
+    game.bags.iter().fold(Bag::new(), |acc, e| Bag {
+        red: acc.red.max(e.red),
+        green: acc.green.max(e.green),
+        blue: acc.blue.max(e.blue),
+    })
+}
+
+pub fn part_two(input: &str) -> Option<usize> {
+    Some(
+        input
+            .lines()
+            .map(parse_game)
+            .map(|g| max_bag(&g).pow())
+            .sum(),
+    )
 }
 
 #[cfg(test)]
@@ -75,6 +99,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(2286));
     }
 }
