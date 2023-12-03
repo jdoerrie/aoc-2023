@@ -1,3 +1,6 @@
+use regex::Regex;
+use std::ops::Range;
+
 use itertools::Itertools;
 
 advent_of_code::solution!(3);
@@ -11,8 +14,7 @@ struct Symbol {
 struct Number {
     n: u32,
     x: usize,
-    y_beg: usize,
-    y_end: usize,
+    y_rng: Range<usize>,
 }
 
 fn parse_symbols(input: &str) -> Vec<Symbol> {
@@ -30,24 +32,14 @@ fn parse_symbols(input: &str) -> Vec<Symbol> {
 
 fn parse_numbers(input: &str) -> Vec<Number> {
     let mut numbers = Vec::new();
+    let re = Regex::new(r"\d+").unwrap();
     for (x, line) in input.lines().enumerate() {
-        for (_, group) in line
-            .char_indices()
-            .group_by(|(_, c)| c.is_ascii_digit())
-            .into_iter()
-            .filter(|(key, _)| *key)
-        {
-            let mut n = 0;
-            let mut y_beg = usize::MAX;
-            let mut y_end = usize::MIN;
-            for (i, c) in group {
-                n *= 10;
-                n += c.to_digit(10).unwrap();
-                y_beg = y_beg.min(i);
-                y_end = y_end.max(i);
-            }
-
-            numbers.push(Number { n, x, y_beg, y_end });
+        for num in re.find_iter(line) {
+            numbers.push(Number {
+                n: num.as_str().parse().unwrap(),
+                x,
+                y_rng: num.range(),
+            })
         }
     }
 
@@ -55,7 +47,7 @@ fn parse_numbers(input: &str) -> Vec<Number> {
 }
 
 fn is_adjacent(s: &Symbol, n: &Number) -> bool {
-    s.x.abs_diff(n.x) <= 1 && n.y_beg <= s.y + 1 && s.y <= n.y_end + 1
+    s.x.abs_diff(n.x) <= 1 && n.y_rng.start <= s.y + 1 && s.y <= n.y_rng.end
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
