@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use tuple::Map;
+
 advent_of_code::solution!(4);
 
 fn split_into_set(input: &str) -> HashSet<u32> {
@@ -9,34 +11,35 @@ fn split_into_set(input: &str) -> HashSet<u32> {
         .collect()
 }
 
+fn parse_line(line: &str) -> (HashSet<u32>, HashSet<u32>) {
+    line.split_once(": ")
+        .unwrap()
+        .1
+        .split_once(" | ")
+        .unwrap()
+        .map(split_into_set)
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     Some(
         input
             .lines()
             .map(|line| {
-                let (winning_numbers, scratch_card) =
-                    line.split_once(": ").unwrap().1.split_once(" | ").unwrap();
-                (match split_into_set(winning_numbers)
-                    .intersection(&split_into_set(scratch_card))
-                    .count()
-                {
+                let (winning_numbers, scratch_card) = parse_line(line);
+                match winning_numbers.intersection(&scratch_card).count(){
                     0 => 0,
-                    i => 1 << (i - 1),
-                }) as u32
+                    i => 1 << (i - 1)
+                }
             })
             .sum(),
     )
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let mut counts = vec![0; input.lines().count()];
+    let mut counts = vec![1; input.lines().count()];
     for (i, line) in input.lines().enumerate() {
-        counts[i] += 1;
-        let (winning_numbers, scratch_card) =
-            line.split_once(": ").unwrap().1.split_once(" | ").unwrap();
-        let matching_nums = split_into_set(winning_numbers)
-            .intersection(&split_into_set(scratch_card))
-            .count();
+        let (winning_numbers, scratch_card) = parse_line(line);
+        let matching_nums = winning_numbers.intersection(&scratch_card).count();
         for j in i + 1..=i + matching_nums {
             counts[j] += counts[i];
         }
