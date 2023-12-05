@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use regex::Regex;
 
 advent_of_code::solution!(1);
 
@@ -14,9 +15,12 @@ pub fn part_one(input: &str) -> Option<u32> {
     )
 }
 
+fn rev_str(s: &str) -> String {
+    s.chars().rev().collect()
+}
+
 pub fn part_two(input: &str) -> Option<u32> {
     let numbers = HashMap::from([
-        ("0", 0),
         ("1", 1),
         ("2", 2),
         ("3", 3),
@@ -37,17 +41,18 @@ pub fn part_two(input: &str) -> Option<u32> {
         ("nine", 9),
     ]);
 
+    let re = r"1|2|3|4|5|6|7|8|9|one|two|three|four|five|six|seven|eight|nine";
+    let start_re = Regex::new(re).unwrap();
+    let rev_re = Regex::new(&rev_str(re)).unwrap();
+
     let mut total_sum = 0;
     for line in input.lines() {
-        let first_digit = numbers
-            .iter()
-            .filter_map(|(k, v)| (line.find(k).map(|i| (i, v))))
-            .min();
-        let last_digit = numbers
-            .iter()
-            .filter_map(|(k, v)| (line.rfind(k).map(|i| (i, v))))
-            .max();
-        total_sum += first_digit.unwrap().1 * 10 + last_digit.unwrap().1;
+        let first_digit = start_re.find(line).unwrap().as_str();
+        let last_digit = rev_str(rev_re.find(&rev_str(line)).unwrap().as_str());
+
+        let first_digit = numbers.get(first_digit).unwrap();
+        let last_digit = numbers.get(last_digit.as_str()).unwrap();
+        total_sum += first_digit * 10 + last_digit
     }
 
     Some(total_sum)
