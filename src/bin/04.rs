@@ -26,9 +26,9 @@ pub fn part_one(input: &str) -> Option<u32> {
             .lines()
             .map(|line| {
                 let (winning_numbers, scratch_card) = parse_line(line);
-                match winning_numbers.intersection(&scratch_card).count(){
+                match winning_numbers.intersection(&scratch_card).count() {
                     0 => 0,
-                    i => 1 << (i - 1)
+                    i => 1 << (i - 1),
                 }
             })
             .sum(),
