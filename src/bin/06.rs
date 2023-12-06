@@ -9,6 +9,21 @@ fn parse_vals(line: &str) -> Vec<f64> {
         .collect_vec()
 }
 
+fn parse_single_val(line: &str) -> f64 {
+    line.replace(' ', "")
+        .split_once(':')
+        .unwrap()
+        .1
+        .parse()
+        .unwrap()
+}
+
+fn get_n_times(t: f64, d: f64) -> u64 {
+    let min_t = t / 2.0 - (f64::sqrt(t * t / 4.0 - d).max(0.0));
+    let ceil_t = (min_t + 1e-8).ceil() as u64;
+    (t as u64 - 2 * ceil_t + 1).max(0)
+}
+
 pub fn part_one(input: &str) -> Option<u64> {
     let (times, distances) = input.lines().collect_tuple().unwrap();
     let (times, distances) = (times, distances).map(parse_vals);
@@ -17,17 +32,15 @@ pub fn part_one(input: &str) -> Option<u64> {
         times
             .into_iter()
             .zip(distances)
-            .map(|(t, d)| {
-                let min_t = t / 2.0 - (f64::sqrt(t * t / 4.0 - d).max(0.0));
-                let ceil_t = (min_t + 1e-8).ceil() as u64;
-                (t as u64 - 2 * ceil_t + 1).max(0)
-            })
+            .map(|(t, d)| get_n_times(t, d))
             .product::<u64>(),
     )
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let (time, distance) = input.lines().collect_tuple().unwrap();
+    let (time, distance) = (time, distance).map(parse_single_val);
+    Some(get_n_times(time, distance))
 }
 
 #[cfg(test)]
@@ -43,6 +56,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(71503));
     }
 }
