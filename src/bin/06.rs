@@ -10,19 +10,15 @@ fn parse_vals(line: &str) -> Vec<f64> {
 }
 
 fn parse_single_val(line: &str) -> f64 {
-    line.chars().fold(0.0, |acc, c| {
-        if c.is_ascii_digit() {
-            acc * 10.0 + (c.to_digit(10).unwrap_or(0)) as f64
-        } else {
-            acc
-        }
-    })
+    line.chars()
+        .filter_map(|c| c.to_digit(10).map(f64::from))
+        .fold(0.0, |acc, d| acc * 10.0 + d)
 }
 
-fn get_n_times(t: f64, d: f64) -> u64 {
-    let min_t = t / 2.0 - (f64::sqrt(t * t / 4.0 - d).max(0.0));
-    let ceil_t = (min_t + 1e-8).ceil() as u64;
-    (t as u64 - 2 * ceil_t + 1).max(0)
+fn get_n_times(time: f64, dist: f64) -> u64 {
+    let min_time = time / 2.0 - (f64::sqrt(time * time / 4.0 - dist).max(0.0));
+    let ceil_time = (min_time + 1e-8).ceil() as u64;
+    (time as u64 - 2 * ceil_time + 1).max(0)
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
@@ -33,7 +29,7 @@ pub fn part_one(input: &str) -> Option<u64> {
         times
             .into_iter()
             .zip(distances)
-            .map(|(t, d)| get_n_times(t, d))
+            .map(|(time, dist)| get_n_times(time, dist))
             .product::<u64>(),
     )
 }
