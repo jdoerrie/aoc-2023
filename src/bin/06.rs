@@ -10,12 +10,13 @@ fn parse_vals(line: &str) -> Vec<f64> {
 }
 
 fn parse_single_val(line: &str) -> f64 {
-    line.replace(' ', "")
-        .split_once(':')
-        .unwrap()
-        .1
-        .parse()
-        .unwrap()
+    line.chars().fold(0.0, |acc, c| {
+        if c.is_ascii_digit() {
+            acc * 10.0 + (c.to_digit(10).unwrap_or(0)) as f64
+        } else {
+            acc
+        }
+    })
 }
 
 fn get_n_times(t: f64, d: f64) -> u64 {
