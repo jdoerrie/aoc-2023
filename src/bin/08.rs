@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use itertools::Itertools;
 use num::Integer;
 use tuple::Map;
@@ -21,26 +19,28 @@ fn parse_dirs(line: &str) -> Vec<Direction> {
         .collect()
 }
 
-fn parse_node(node: &str) -> i64 {
-    i64::from_str_radix(node, 36).unwrap()
+fn parse_node(node: &str) -> u16 {
+    u16::from_str_radix(node, 36).unwrap()
 }
 
-fn is_start(node: i64) -> bool {
+fn is_start(node: u16) -> bool {
     node % 36 == 10
 }
 
-fn is_end(node: i64) -> bool {
+fn is_end(node: u16) -> bool {
     node % 36 == 35
 }
 
-type Network = HashMap<i64, (i64, i64)>;
+type Network = Vec<Option<(u16, u16)>>;
 
-fn parse_network(lines: &str) -> Network {
-    HashMap::from_iter(lines.lines().map(|line| {
+fn parse_network(input: &str) -> Network {
+    let mut net = vec![None; parse_node("ZZZ") as usize + 1];
+    for line in input.lines() {
         let (key, val) = line.split_once(" = ").unwrap();
         let (lhs, rhs) = val[1..9].split_once(", ").unwrap();
-        (parse_node(key), (parse_node(lhs), parse_node(rhs)))
-    }))
+        net[parse_node(key) as usize] = Some((parse_node(lhs), parse_node(rhs)));
+    }
+    net
 }
 
 fn traverse_network(net: &Network, dirs: &[Direction]) -> usize {
@@ -48,8 +48,8 @@ fn traverse_network(net: &Network, dirs: &[Direction]) -> usize {
     let mut node = start;
     for (i, dir) in dirs.iter().cycle().enumerate() {
         node = match dir {
-            Direction::Left => net.get(&node).unwrap().0,
-            Direction::Right => net.get(&node).unwrap().1,
+            Direction::Left => net[node as usize].unwrap().0,
+            Direction::Right => net[node as usize].unwrap().1,
         };
         if node == end {
             return i + 1;
@@ -60,7 +60,12 @@ fn traverse_network(net: &Network, dirs: &[Direction]) -> usize {
 }
 
 fn traverse_network_ghost(net: &Network, dirs: &[Direction]) -> usize {
-    let mut nodes = net.keys().copied().filter(|&k| is_start(k)).collect_vec();
+    let mut nodes = net
+        .iter()
+        .enumerate()
+        .filter_map(|(i, p)| if p.is_some() { Some(i as u16) } else { None })
+        .filter(|&k| is_start(k))
+        .collect_vec();
 
     let mut n_cycle = 0;
     let mut cycle_lens = vec![None; nodes.len()];
@@ -70,8 +75,8 @@ fn traverse_network_ghost(net: &Network, dirs: &[Direction]) -> usize {
             nodes = nodes
                 .iter()
                 .map(|node| match dir {
-                    Direction::Left => net.get(node).unwrap().0,
-                    Direction::Right => net.get(node).unwrap().1,
+                    Direction::Left => net[*node as usize].unwrap().0,
+                    Direction::Right => net[*node as usize].unwrap().1,
                 })
                 .collect();
         }
