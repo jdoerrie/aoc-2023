@@ -54,8 +54,8 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(
         adjusted_galaxies
             .iter()
-            .combinations(2)
-            .map(|c| manhatten_distance(c[0], c[1]))
+            .tuple_combinations()
+            .map(|(x, y)| manhatten_distance(x, y))
             .sum(),
     )
 }
@@ -70,8 +70,8 @@ pub fn part_two(input: &str) -> Option<usize> {
     Some(
         adjusted_galaxies
             .iter()
-            .combinations(2)
-            .map(|c| manhatten_distance(c[0], c[1]))
+            .tuple_combinations()
+            .map(|(x, y)| manhatten_distance(x, y))
             .sum(),
     )
 }
