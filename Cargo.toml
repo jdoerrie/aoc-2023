@@ -20,3 +20,4 @@ regex = "1.10.2"
 tuple = "0.5.1"
 rangemap = "1.4.0"
 num = "0.4.1"
+phf = {version = "0.11.2", features = ["macros"]}
