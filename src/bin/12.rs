@@ -1,5 +1,7 @@
 advent_of_code::solution!(12);
 
+use rayon::prelude::*;
+
 #[derive(Clone, Copy, PartialEq)]
 enum Spring {
     Operational,
@@ -101,7 +103,7 @@ fn dp_entry(springs: &[Spring], blocks: &[usize]) -> usize {
 pub fn part_one(input: &str) -> Option<usize> {
     Some(
         input
-            .lines()
+            .par_lines()
             .map(|l| {
                 let (springs, blocks) = l.split_once(' ').unwrap();
                 let springs = [springs; 1].join("?") + ".";
@@ -117,7 +119,7 @@ pub fn part_one(input: &str) -> Option<usize> {
 pub fn part_two(input: &str) -> Option<usize> {
     Some(
         input
-            .lines()
+            .par_lines()
             .map(|l| {
                 let (springs, blocks) = l.split_once(' ').unwrap();
                 let springs = [springs; 5].join("?") + ".";
