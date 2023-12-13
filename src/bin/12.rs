@@ -28,76 +28,58 @@ fn parse_blocks(line: &str) -> Vec<usize> {
     line.split(',').flat_map(str::parse).collect()
 }
 
-type Cache = HashMap<(usize, usize, Option<usize>), usize>;
-fn dp(springs: &[Spring], blocks: &[usize], curr_block: Option<usize>, cache: &mut Cache) -> usize {
+type FastCache = HashMap<[usize; 2], usize>;
+fn dp_fast_impl(springs: &[Spring], blocks: &[usize], cache: &mut FastCache) -> usize {
     if springs.is_empty() {
-        return if blocks.is_empty() && curr_block.is_none() {
-            1
-        } else {
-            0
-        };
+        return blocks.is_empty() as usize;
     }
 
-    let block0 = *blocks.first().unwrap_or(&0);
-    if curr_block.unwrap_or(0) > block0 {
-        return 0;
-    }
-
-    let damaged = |cache: &mut Cache| {
-        dp(
-            &springs[1..],
+    let opl = |springs: &[Spring], cache: &mut FastCache| {
+        dp_fast_impl(
+            &springs[springs
+                .iter()
+                .position(|&s| s != Operational)
+                .unwrap_or(springs.len())..],
             blocks,
-            Some(curr_block.unwrap_or(0) + 1),
             cache,
         )
     };
-    let operational = |cache: &mut Cache| {
-        dp(
-            &springs[1..],
-            if curr_block.is_none() {
-                blocks
+
+    let dmg = |cache: &mut FastCache| {
+        if blocks.is_empty() {
+            0
+        } else {
+            let block0 = *blocks.first().unwrap();
+            if block0 <= springs.len()
+                && springs[0..block0].iter().all(|&s| s != Operational)
+                && springs.get(block0).unwrap_or(&Operational) != &Damaged
+            {
+                dp_fast_impl(&springs[block0 + 1..], &blocks[1..], cache)
             } else {
-                assert!(block0 == curr_block.unwrap());
-                &blocks[1..]
-            },
-            None,
-            cache,
-        )
-    };
-
-    let key = (springs.len(), blocks.len(), curr_block);
-    if let Some(val) = cache.get(&key) {
-        return *val;
-    }
-
-    let val = match springs[0] {
-        Damaged => damaged(cache),
-        Operational => {
-            if curr_block.is_some() && block0 != curr_block.unwrap() {
                 0
-            } else {
-                operational(cache)
-            }
-        }
-        Unknown => {
-            if curr_block.unwrap_or(0) == block0 {
-                operational(cache)
-            } else {
-                match curr_block {
-                    None => operational(cache) + damaged(cache),
-                    Some(_) => damaged(cache),
-                }
             }
         }
     };
 
-    cache.insert(key, val);
-    val
+    match springs[0] {
+        Operational => opl(springs, cache),
+        Damaged => dmg(cache),
+        Unknown => {
+            let k = [springs.len(), blocks.len()];
+            if let Some(v) = cache.get(&k) {
+                *v
+            } else {
+                let v = opl(&springs[1..], cache) + dmg(cache);
+                cache.insert(k, v);
+                v
+            }
+        }
+    }
 }
 
-fn dp_entry(springs: &[Spring], blocks: &[usize]) -> usize {
+fn dp_fast(springs: &[Spring], blocks: &[usize]) -> usize {
     let mut cache = HashMap::new();
-    dp(springs, blocks, None, &mut cache)
+    dp_fast_impl(springs, blocks, &mut cache)
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
@@ -110,7 +92,7 @@ pub fn part_one(input: &str) -> Option<usize> {
                 let blocks = [blocks; 1].join(",");
                 let springs = parse_springs(&springs);
                 let blocks = parse_blocks(&blocks);
-                dp_entry(&springs, &blocks)
+                dp_fast(&springs, &blocks)
             })
             .sum(),
     )
@@ -126,7 +108,7 @@ pub fn part_two(input: &str) -> Option<usize> {
                 let blocks = [blocks; 5].join(",");
                 let springs = parse_springs(&springs);
                 let blocks = parse_blocks(&blocks);
-                dp_entry(&springs, &blocks)
+                dp_fast(&springs, &blocks)
             })
             .sum(),
     )
@@ -145,6 +127,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(525152));
+        assert_eq!(result, Some(21));
     }
 }
