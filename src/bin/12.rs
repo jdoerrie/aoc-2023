@@ -1,5 +1,6 @@
 advent_of_code::solution!(12);
 
+use grid::Grid;
 use rayon::prelude::*;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -8,8 +9,6 @@ enum Spring {
     Damaged,
     Unknown,
 }
-
-use std::collections::HashMap;
 
 use Spring::*;
 
@@ -28,7 +27,7 @@ fn parse_blocks(line: &str) -> Vec<usize> {
     line.split(',').flat_map(str::parse).collect()
 }
 
-type FastCache = HashMap<[usize; 2], usize>;
+type FastCache = Grid<Option<usize>>;
 fn dp_fast_impl(springs: &[Spring], blocks: &[usize], cache: &mut FastCache) -> usize {
     if springs.is_empty() {
         return blocks.is_empty() as usize;
@@ -65,20 +64,18 @@ fn dp_fast_impl(springs: &[Spring], blocks: &[usize], cache: &mut FastCache) -> 
         Operational => opl(springs, cache),
         Damaged => dmg(cache),
         Unknown => {
-            let k = [springs.len(), blocks.len()];
-            if let Some(v) = cache.get(&k) {
-                *v
-            } else {
+            let cached = cache[(springs.len(), blocks.len())];
+            if cached.is_none() {
                 let v = opl(&springs[1..], cache) + dmg(cache);
-                cache.insert(k, v);
-                v
+                cache[(springs.len(), blocks.len())] = Some(v);
             }
+            cache[(springs.len(), blocks.len())].unwrap()
         }
     }
 }
 
 fn dp_fast(springs: &[Spring], blocks: &[usize]) -> usize {
-    let mut cache = HashMap::new();
+    let mut cache = Grid::new(springs.len() + 1, blocks.len() + 1);
     dp_fast_impl(springs, blocks, &mut cache)
 }
 
@@ -127,6 +124,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(21));
+        assert_eq!(result, Some(525152));
     }
 }
