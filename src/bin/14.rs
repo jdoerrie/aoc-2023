@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::HashMap;
 
-use grid::{grid, Grid};
+use grid::Grid;
 
 advent_of_code::solution!(14);
 
@@ -8,13 +8,6 @@ advent_of_code::solution!(14);
 enum Rock {
     Round,
     Cube,
-}
-
-enum Tilt {
-    North,
-    West,
-    South,
-    East,
 }
 
 use itertools::Itertools;
@@ -60,35 +53,14 @@ fn do_west_shift(rocks: &mut Rocks) {
     }
 }
 
-fn do_shift(rocks: &[&Option<Rock>]) -> Vec<Option<Rock>> {
-    let mut new_rocks = Vec::with_capacity(rocks.len());
-    for (i, &rock) in rocks.iter().enumerate() {
-        match rock {
-            Some(Round) => new_rocks.push(Some(Round)),
-            Some(Cube) => {
-                while new_rocks.len() < i {
-                    new_rocks.push(None);
-                }
-                new_rocks.push(Some(Cube));
-            }
-            None => {}
-        }
-    }
-    while new_rocks.len() < rocks.len() {
-        new_rocks.push(None);
-    }
-    new_rocks
-}
-
-fn do_cycle(mut rocks: Rocks) -> Rocks {
+fn do_cycle(rocks: &mut Rocks) {
     rocks.rotate_left();
     for _ in 0..4 {
-        do_west_shift(&mut rocks);
+        do_west_shift(rocks);
         rocks.rotate_right();
     }
 
     rocks.rotate_right();
-    rocks
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
@@ -130,27 +102,26 @@ fn calc_load(rocks: &Rocks) -> usize {
 
 pub fn part_two(input: &str) -> Option<usize> {
     let mut rocks = parse_rocks(input);
-    let mut lru_cache = VecDeque::new();
     let n_cycles = 1_000_000_000;
-    let cache_size = 100000;
-    lru_cache.push_back(rocks.clone());
+    let mut cache = HashMap::new();
+    let mut loads = Vec::new();
+    let load = calc_load(&rocks);
+    loads.push(load);
+    cache.insert(load, vec![(0, rocks.clone())]);
     for i in 1..=n_cycles {
-        rocks = do_cycle(rocks);
-        if let Some(j) = lru_cache.iter().position(|r| *r == rocks) {
-            println!("Breaking in loop {i}: {j}");
-            let cycle_len = (i % cache_size) - j;
+        do_cycle(&mut rocks);
+
+        let load = calc_load(&rocks);
+        loads.push(load);
+        let v = cache.entry(load).or_default();
+        if let Some(j) = v.iter().position(|r| r.1 == rocks) {
+            let j = v[j].0;
+            let cycle_len = i - j;
             let remaining = (n_cycles - i) % cycle_len;
-            for _ in 0..remaining {
-                rocks = do_cycle(rocks);
-            }
-
-            break;
+            return Some(loads[remaining + j]);
         }
 
-        lru_cache.push_back(rocks.clone());
-        if lru_cache.len() > cache_size {
-            lru_cache.pop_front();
-        }
+        v.push((i, rocks.clone()));
     }
 
     Some(calc_load(&rocks))
