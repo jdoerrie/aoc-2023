@@ -20,8 +20,6 @@ enum Dir {
 }
 
 use grid::{grid, Grid};
-use itertools::Itertools;
-use rayon::iter::IntoParallelRefIterator;
 use Dir::*;
 
 type Tiles = Grid<Option<Tile>>;
@@ -39,7 +37,7 @@ fn parse(input: &str) -> Grid<Option<Tile>> {
                     '/' => Some(MirrorLF),
                     _ => panic!(""),
                 })
-                .collect_vec(),
+                .collect(),
         );
     }
 
