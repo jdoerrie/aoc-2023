@@ -92,7 +92,7 @@ fn do_step(grid: &Tiles, (r, c): Pos, dir: Dir) -> [Option<PosDir>; 2] {
 }
 
 fn solve(grid: &Tiles, pos: Pos, dir: Dir) -> usize {
-    let mut seen = [[0; 110]; 110];
+    let mut seen = Grid::<u8>::new(grid.size().0, grid.size().1);
     let mut stack = Vec::new();
     let bit = |dir| match dir {
         Up => 1 << 0,
@@ -100,20 +100,18 @@ fn solve(grid: &Tiles, pos: Pos, dir: Dir) -> usize {
         Left => 1 << 2,
         Right => 1 << 3,
     };
-    seen[pos.0][pos.1] |= bit(dir);
+    seen[pos] |= bit(dir);
     stack.push((pos, dir));
     while let Some((pos, dir)) = stack.pop() {
         for (pos, dir) in do_step(grid, pos, dir).into_iter().flatten() {
-            if (seen[pos.0][pos.1] & bit(dir)) == 0 {
-                seen[pos.0][pos.1] |= bit(dir);
+            if (seen[pos] & bit(dir)) == 0 {
+                seen[pos] |= bit(dir);
                 stack.push((pos, dir));
             }
         }
     }
 
-    seen.into_iter()
-        .map(|r| r.into_iter().filter(|x| *x != 0).count())
-        .sum()
+    seen.iter().filter(|&x| *x != 0).count()
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
