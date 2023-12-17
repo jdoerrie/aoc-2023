@@ -36,8 +36,6 @@ type Pos = (usize, usize);
 
 type State = (Pos, Dir, usize);
 
-const MAX_COUNT: usize = 3;
-
 fn next_pos((m, n): (usize, usize), (r, c): Pos, dir: Dir) -> Option<Pos> {
     let (r, c) = match dir {
         Up => (r.wrapping_sub(1), c),
@@ -53,7 +51,12 @@ fn next_pos((m, n): (usize, usize), (r, c): Pos, dir: Dir) -> Option<Pos> {
     }
 }
 
-fn next(dims: (usize, usize), (pos, dir, cnt): State) -> ArrayVec<State, 3> {
+fn next(
+    dims: (usize, usize),
+    (pos, dir, cnt): State,
+    min_cnt: usize,
+    max_cnt: usize,
+) -> ArrayVec<State, 3> {
     [Up, Down, Left, Right]
         .into_iter()
         .filter(|&d| match (d, dir) {
@@ -61,7 +64,7 @@ fn next(dims: (usize, usize), (pos, dir, cnt): State) -> ArrayVec<State, 3> {
             (Down, Up) => false,
             (Left, Right) => false,
             (Right, Left) => false,
-            (x, y) => x != y || cnt < MAX_COUNT,
+            (x, y) => (x != y && cnt >= min_cnt) || (x == y && cnt < max_cnt),
         })
         .filter(|&d| next_pos(dims, pos, d).is_some())
         .map(|d| {
@@ -74,56 +77,7 @@ fn next(dims: (usize, usize), (pos, dir, cnt): State) -> ArrayVec<State, 3> {
         .collect()
 }
 
-fn next2(dims: (usize, usize), (pos, dir, cnt): State) -> ArrayVec<State, 3> {
-    [Up, Down, Left, Right]
-        .into_iter()
-        .filter(|&d| match (d, dir) {
-            (Up, Down) => false,
-            (Down, Up) => false,
-            (Left, Right) => false,
-            (Right, Left) => false,
-            (x, y) => (x == y && cnt < 10) || (x != y && cnt >= 4),
-        })
-        .filter(|&d| next_pos(dims, pos, d).is_some())
-        .map(|d| {
-            (
-                next_pos(dims, pos, d).unwrap(),
-                d,
-                ((d == dir) as usize * cnt) + 1,
-            )
-        })
-        .collect()
-}
-
-fn solve(heats: &Heats) -> usize {
-    let mut costs = HashMap::new();
-    let mut pq = BinaryHeap::new();
-
-    let goal = (heats.size().0 - 1, heats.size().1 - 1);
-    let start: State = ((0, 0), Down, 0);
-    let cost = 0;
-    costs.insert(start, cost);
-    pq.push((Reverse(cost), start));
-    while let Some((Reverse(cost), state)) = pq.pop() {
-        // println!("Popping {:?}: {cost}", state);
-        if state.0 == goal {
-            return cost;
-        }
-
-        for next in next(heats.size(), state) {
-            let next_cost = cost + heats[next.0];
-            let entry = costs.entry(next).or_insert(usize::MAX);
-            if next_cost < *entry {
-                *entry = next_cost;
-                pq.push((Reverse(next_cost), next));
-            }
-        }
-    }
-
-    unreachable!("No Goal");
-}
-
-fn solve2(heats: &Heats) -> usize {
+fn solve(heats: &Heats, min_cnt: usize, max_cnt: usize) -> usize {
     let mut costs = HashMap::new();
     let mut pq = BinaryHeap::new();
 
@@ -136,12 +90,11 @@ fn solve2(heats: &Heats) -> usize {
     pq.push((Reverse(cost), down));
     pq.push((Reverse(cost), right));
     while let Some((Reverse(cost), state)) = pq.pop() {
-        // println!("Popping {:?}: {cost}", state);
-        if state.0 == goal && state.2 >= 4 {
+        if state.0 == goal && state.2 >= min_cnt {
             return cost;
         }
 
-        for next in next2(heats.size(), state) {
+        for next in next(heats.size(), state, min_cnt, max_cnt) {
             let next_cost = cost + heats[next.0];
             let entry = costs.entry(next).or_insert(usize::MAX);
             if next_cost < *entry {
@@ -156,12 +109,12 @@ fn solve2(heats: &Heats) -> usize {
 
 pub fn part_one(input: &str) -> Option<usize> {
     let heats = parse(input);
-    Some(solve(&heats))
+    Some(solve(&heats, 0, 3))
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
     let heats = parse(input);
-    Some(solve2(&heats))
+    Some(solve(&heats, 4, 10))
 }
 
 #[cfg(test)]
