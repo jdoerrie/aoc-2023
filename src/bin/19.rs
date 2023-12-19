@@ -2,10 +2,10 @@ advent_of_code::solution!(19);
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
 enum Category {
-    X,
-    M,
-    A,
-    S,
+    X = 0,
+    M = 1,
+    A = 2,
+    S = 3,
 }
 
 use std::{collections::HashMap, ops::Range};
@@ -110,7 +110,7 @@ fn parse_flows(input: &str) -> Flows {
         .collect()
 }
 
-type Item = HashMap<Category, usize>;
+type Item = [usize; 4];
 fn parse_items(input: &str) -> Vec<Item> {
     input
         .lines()
@@ -122,17 +122,21 @@ fn parse_items(input: &str) -> Vec<Item> {
             l.split(',')
                 .map(|item| {
                     let (cat, lim) = item.split_once('=').unwrap();
-                    (parse_cat(cat), lim.parse().unwrap())
+                    (parse_cat(cat) as u8, lim.parse().unwrap())
                 })
-                .collect()
+                .sorted()
+                .map(|(_, x)| x)
+                .collect_vec()
+                .try_into()
+                .unwrap()
         })
         .collect()
 }
 
 fn eval_rule(item: &Item, rule: &Rule) -> bool {
     match rule.cmp {
-        Compare::LessThan => item.get(&rule.cat).unwrap() < &rule.lim,
-        Compare::GreaterThan => item.get(&rule.cat).unwrap() > &rule.lim,
+        Compare::LessThan => item[rule.cat as usize] < rule.lim,
+        Compare::GreaterThan => item[rule.cat as usize] > rule.lim,
     }
 }
 
@@ -164,21 +168,21 @@ pub fn part_one(input: &str) -> Option<usize> {
         items
             .iter()
             .filter(|item| eval_flows(item, &flows) == Accepted)
-            .map(|item| item.values().sum::<usize>())
+            .map(|item| item.iter().sum::<usize>())
             .sum(),
     )
 }
 
-type Ranges = HashMap<Category, Range<usize>>;
+type Ranges = [Range<usize>; 4];
 
 fn n_items(rng: &Ranges) -> usize {
-    rng.values().map(|r| r.end - r.start.min(r.end)).product()
+    rng.iter().map(|r| r.end - r.start.min(r.end)).product()
 }
 
 fn split_ranges_at_rule(ranges: &Ranges, rule: &Rule) -> (Ranges, Ranges) {
     let (mut lhs, mut rhs) = (ranges.clone(), ranges.clone());
 
-    let rng = ranges.get(&rule.cat).unwrap().clone();
+    let rng = ranges[rule.cat as usize].clone();
     let (min, max) = match rule.cmp {
         Compare::LessThan => (
             rng.start..rng.end.min(rule.lim),
@@ -190,8 +194,8 @@ fn split_ranges_at_rule(ranges: &Ranges, rule: &Rule) -> (Ranges, Ranges) {
         ),
     };
 
-    lhs.insert(rule.cat, min);
-    rhs.insert(rule.cat, max);
+    lhs[rule.cat as usize] = min;
+    rhs[rule.cat as usize] = max;
     assert_eq!(n_items(ranges), n_items(&lhs) + n_items(&rhs));
     (lhs, rhs)
 }
@@ -210,7 +214,7 @@ fn split_ranges(work_flow: &WorkFlow, ranges: &Ranges) -> Vec<(Flow, Ranges)> {
 }
 
 fn solve(flows: &Flows) -> usize {
-    let ranges = HashMap::from([(X, 1..4001), (M, 1..4001), (A, 1..4001), (S, 1..4001)]);
+    let ranges = [1..4001, 1..4001, 1..4001, 1..4001];
     let mut accepted = vec![];
     let mut stack = vec![("in".to_string(), ranges)];
     while let Some((name, rngs)) = stack.pop() {
