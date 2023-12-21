@@ -93,8 +93,6 @@ pub fn part_one(input: &str) -> Option<usize> {
             while let Some((mdl, in_pulse)) = q.pop_front() {
                 for next in outputs.get(mdl).unwrap() {
                     *cnt.entry(in_pulse).or_default() += 1;
-                    // println!("Sending {:?} from {mdl} to {next}", in_pulse);
-
                     if let Some(next_mdl) = modules.get_mut(next) {
                         if let Some(out_pulse) = send(mdl, in_pulse, next_mdl) {
                             q.push_back((next, out_pulse));
