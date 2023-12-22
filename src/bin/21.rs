@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 use arrayvec::ArrayVec;
 use grid::{grid, Grid};
@@ -84,27 +84,32 @@ fn get_distances(tiles: &Tiles) -> Grid<Option<usize>> {
     distances
 }
 
-fn get_distances_inf(tiles: &Tiles, max_dist: usize) -> HashMap<[isize; 2], usize> {
+fn get_distances_inf(tiles: &Tiles, max_dist: usize) -> Vec<usize> {
     let (start, _) = tiles.indexed_iter().find(|(_, t)| **t == Start).unwrap();
     let start = [start.0 as isize, start.1 as isize];
+    let rows = tiles.rows();
 
-    let mut distances = HashMap::new();
-    let mut q = VecDeque::new();
-    q.push_back((start, 0));
-    distances.insert(start, 0);
+    let mut distances = Grid::new(rows * 7, rows * 7);
+    let mut q = vec![(start, 0)];
+    distances[(start[0] as usize, start[1] as usize)] = Some(0);
 
-    while let Some((pos, d)) = q.pop_front() {
-        q.extend(next_moves_inf(tiles, pos).iter().filter_map(|&pos| {
-            if !distances.contains_key(&pos) && d < max_dist {
-                distances.insert(pos, d + 1);
-                Some((pos, d + 1))
-            } else {
-                None
-            }
-        }));
+    let mut i = 0;
+    while i < q.len() {
+        let (pos, d) = q[i];
+        i += 1;
+        if d < max_dist {
+            q.extend(next_moves_inf(tiles, pos).iter().filter_map(|&pos| {
+                let dist = &mut distances[(pos[0] as usize + rows * 3, pos[1] as usize + rows * 3)];
+                if dist.is_none() {
+                    Some((pos, *dist.insert(d + 1)))
+                } else {
+                    None
+                }
+            }));
+        }
     }
 
-    distances
+    distances.iter().flatten().copied().collect()
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
@@ -137,17 +142,12 @@ pub fn part_two(input: &str) -> Option<usize> {
     assert_eq!(tiles.rows(), tiles.cols());
     let m = tiles.rows();
 
-    let dists = get_distances_inf(&tiles, 131 * 2 + 65);
+    let dists = get_distances_inf(&tiles, m * 2 + m % n);
     let xs = [0, 1, 2];
-    let ys: [usize; 3] = xs
+    let ys = xs
         .iter()
         .map(|i| (n % m) + i * m)
-        .map(|x| {
-            dists
-                .values()
-                .filter(|&&v| v % 2 == x % 2 && v <= x)
-                .count()
-        })
+        .map(|x| dists.iter().filter(|&&v| v % 2 == x % 2 && v <= x).count())
         .collect_vec()
         .try_into()
         .unwrap();
