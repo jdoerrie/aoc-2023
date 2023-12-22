@@ -151,7 +151,7 @@ pub fn part_two(input: &str) -> Option<usize> {
         }
     }
 
-    let rx_in = *inputs.get("rx")?.get(0)?;
+    let rx_in = *inputs.get("rx")?.first()?;
     let mut first_highs = HashMap::new();
 
     let mut cnt = 0;
