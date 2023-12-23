@@ -30,10 +30,10 @@ fn parse(input: &str) -> Array3<usize> {
     space
 }
 
-fn fall_sand(blocks: &Array3<usize>) -> Array3<usize> {
-    let mut res = Array3::zeros(blocks.shape().clone());
-    res
-}
+// fn fall_sand(blocks: &Array3<usize>) -> Array3<usize> {
+//     let mut res = Array3::zeros(blocks.shape().clone());
+//     res
+// }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let space = parse(input);
