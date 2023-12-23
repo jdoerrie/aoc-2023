@@ -109,11 +109,10 @@ fn find_neighbors(grid: &Grid, u: [usize; 2], pois: &[[usize; 2]]) -> Vec<([usiz
     res
 }
 
-fn dfs_impl(grid: &Grid, mut path: Vec<[usize; 2]>) -> Option<usize> {
-    let &[r, c] = path.last().unwrap();
+fn dfs_impl(grid: &Grid, [r, c]: [usize; 2], visited: &mut Array2<bool>) -> Option<usize> {
     if r + 1 == grid.shape()[0] && grid[[r, c]] == Path {
         // println!("Found Path of Len {}", path.len() - 1);
-        return Some(path.len() - 1);
+        return Some(0);
     }
 
     let mut next = ArrayVec::<[usize; 2], 4>::new();
@@ -134,31 +133,27 @@ fn dfs_impl(grid: &Grid, mut path: Vec<[usize; 2]>) -> Option<usize> {
 
     let filtered = ArrayVec::<[usize; 2], 4>::from_iter(
         next.into_iter()
-            .filter(|n| grid.get(*n).is_some_and(|t| *t != Forest) && path.iter().all(|p| p != n)),
+            .filter(|n| grid.get(*n).is_some_and(|t| *t != Forest) && !visited[*n]),
     );
 
-    match filtered.len() {
-        0 => None,
-        1 => {
-            path.push(filtered[0]);
-            dfs_impl(grid, path)
+    filtered.into_iter().fold(None, |acc, v| {
+        visited[v] = true;
+        let res = dfs_impl(grid, v, visited).map(|res| res + 1);
+        visited[v] = false;
+        if res.is_none() {
+            acc
+        } else {
+            res.map(|l| l.max(acc.unwrap_or(usize::MIN)))
         }
-        _ => filtered.into_iter().fold(None, |acc, e| {
-            let mut p = path.clone();
-            p.push(e);
-            let res = dfs_impl(grid, p);
-            if res.is_none() {
-                acc
-            } else {
-                res.map(|l| l.max(acc.unwrap_or(usize::MIN)))
-            }
-        }),
-    }
+    })
 }
 
 fn dfs(grid: &Grid) -> Option<usize> {
+    let [rows, cols] = grid.shape().try_into().unwrap();
     let start = [0, grid.row(0).iter().position(|&t| t == Path).unwrap()];
-    dfs_impl(grid, vec![start])
+    let mut visited = Array2::from_elem((rows, cols), false);
+    visited[start] = true;
+    dfs_impl(grid, start, &mut visited)
 }
 
 type Graph = Vec<ArrayVec<(usize, usize), 4>>;
