@@ -163,18 +163,15 @@ fn dfs(grid: &Grid) -> Option<usize> {
 
 type Graph = Vec<ArrayVec<(usize, usize), 4>>;
 
-fn dfs_compressed_impl(g: &Graph, path: &[usize], end: usize) -> Option<usize> {
-    let &u = path.last().unwrap();
+fn dfs_compressed_impl(g: &Graph, u: usize, seen: u64, end: usize) -> Option<usize> {
     if u == end {
         return Some(0);
     }
 
     let mut cost = None;
     for (v, d) in g[u].iter() {
-        if path.iter().all(|p| p != v) {
-            let mut p = path.to_vec();
-            p.push(*v);
-            let res = dfs_compressed_impl(g, &p, end);
+        if seen & (1 << v) == 0 {
+            let res = dfs_compressed_impl(g, *v, seen | (1 << v), end);
             if res.is_some() {
                 cost = Some(cost.unwrap_or(0).max(d + res.unwrap()));
             }
@@ -185,7 +182,7 @@ fn dfs_compressed_impl(g: &Graph, path: &[usize], end: usize) -> Option<usize> {
 }
 
 fn dfs_compressed(g: &Graph, start: usize, end: usize) -> Option<usize> {
-    dfs_compressed_impl(g, &[start], end)
+    dfs_compressed_impl(g, start, 1 << start, end)
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
