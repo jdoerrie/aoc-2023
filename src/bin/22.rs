@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use ndarray::{s, Array3};
+use ndarray::{s, Array3, Axis};
 use tuple::Map;
 
 advent_of_code::solution!(22);
@@ -30,14 +30,19 @@ fn parse(input: &str) -> Array3<usize> {
     space
 }
 
-// fn fall_sand(blocks: &Array3<usize>) -> Array3<usize> {
-//     let mut res = Array3::zeros(blocks.shape().clone());
-//     res
-// }
+fn fall_sand(blocks: &Array3<usize>) -> Array3<usize> {
+    let mut res = Array3::zeros(blocks.raw_dim());
+    for xy in blocks.axis_iter(Axis(2)) {
+        println!("{:?}", xy);
+    }
+
+    res
+}
 
 pub fn part_one(input: &str) -> Option<u32> {
     let space = parse(input);
     println!("{:?}", space);
+    fall_sand(&space);
     None
 }
 
