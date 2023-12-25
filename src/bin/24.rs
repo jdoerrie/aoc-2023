@@ -91,7 +91,8 @@ pub fn part_two(input: &str) -> Option<u32> {
         pq.0 * v.1 - v.0 * pq.1,
     );
 
-    // (18 - 19, 19 - 13, 22 - 30)
+    
+
 
     None
 }
