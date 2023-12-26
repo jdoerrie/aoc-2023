@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use itertools::Itertools;
 use rand::{seq::SliceRandom, thread_rng};
@@ -107,7 +107,7 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(min_cut(&mut edges, vertices.len()))
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(_input: &str) -> Option<u32> {
     None
 }
 

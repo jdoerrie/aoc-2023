@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use ndarray::{array, Array2};
 
 advent_of_code::solution!(24);
 
@@ -73,40 +72,40 @@ pub fn part_one(input: &str) -> Option<usize> {
     )
 }
 
-fn find_stone(lines: &[Line; 3]) -> Line {
-    // Let a, b, c be three lines and s be the stone.
-    // s.p[0] + t * s.v[0] = a.p[0] + t * a.v[0]
-    // s.p[1] + t * s.v[1] = a.p[1] + t * a.v[1]
-    // s.p[2] + t * s.v[2] = a.p[2] + t * a.v[2]
-    // s.p[0] + u * s.v[0] = b.p[0] + u * b.v[0]
-    // s.p[1] + u * s.v[1] = b.p[1] + u * b.v[1]
-    // s.p[2] + u * s.v[2] = b.p[2] + u * b.v[2]
-    // s.p[0] + v * s.v[0] = c.p[0] + v * c.v[0]
-    // s.p[1] + v * s.v[1] = c.p[1] + v * c.v[1]
-    // s.p[2] + v * s.v[2] = c.p[2] + v * c.v[2]
+// fn find_stone(lines: &[Line; 3]) -> Line {
+// Let a, b, c be three lines and s be the stone.
+// s.p[0] + t * s.v[0] = a.p[0] + t * a.v[0]
+// s.p[1] + t * s.v[1] = a.p[1] + t * a.v[1]
+// s.p[2] + t * s.v[2] = a.p[2] + t * a.v[2]
+// s.p[0] + u * s.v[0] = b.p[0] + u * b.v[0]
+// s.p[1] + u * s.v[1] = b.p[1] + u * b.v[1]
+// s.p[2] + u * s.v[2] = b.p[2] + u * b.v[2]
+// s.p[0] + v * s.v[0] = c.p[0] + v * c.v[0]
+// s.p[1] + v * s.v[1] = c.p[1] + v * c.v[1]
+// s.p[2] + v * s.v[2] = c.p[2] + v * c.v[2]
 
-    // Re-arranging:
-    // s.p[0] + t * (s.v[0] - a.v[0]) = a.p[0]
-    // s.p[1] + t * (s.v[1] - a.v[1]) = a.p[1]
-    // s.p[2] + t * (s.v[2] - a.v[2]) = a.p[2]
-    // s.p[0] + u * (s.v[0] - b.v[0]) = b.p[0]
-    // s.p[1] + u * (s.v[1] - b.v[1]) = b.p[1]
-    // s.p[2] + u * (s.v[2] - b.v[2]) = b.p[2]
-    // s.p[0] + v * (s.v[0] - c.v[0]) = c.p[0]
-    // s.p[1] + v * (s.v[1] - c.v[1]) = c.p[1]
-    // s.p[2] + v * (s.v[2] - c.v[2]) = c.p[2]
+// Re-arranging:
+// s.p[0] + t * (s.v[0] - a.v[0]) = a.p[0]
+// s.p[1] + t * (s.v[1] - a.v[1]) = a.p[1]
+// s.p[2] + t * (s.v[2] - a.v[2]) = a.p[2]
+// s.p[0] + u * (s.v[0] - b.v[0]) = b.p[0]
+// s.p[1] + u * (s.v[1] - b.v[1]) = b.p[1]
+// s.p[2] + u * (s.v[2] - b.v[2]) = b.p[2]
+// s.p[0] + v * (s.v[0] - c.v[0]) = c.p[0]
+// s.p[1] + v * (s.v[1] - c.v[1]) = c.p[1]
+// s.p[2] + v * (s.v[2] - c.v[2]) = c.p[2]
 
-    // x = [s.p[0], s.p[1], s.p[2], s.v[0], s.v[1], s.v[2], t, u, v]
-    // let a: Array2<f64> = array![
-    //     [1.,
-    //     [2., -2., 4.],
-    //     [-2., 1., -2.]
-    // ];
-    // Line::default()
-}
+// x = [s.p[0], s.p[1], s.p[2], s.v[0], s.v[1], s.v[2], t, u, v]
+// let a: Array2<f64> = array![
+//     [1.,
+//     [2., -2., 4.],
+//     [-2., 1., -2.]
+// ];
+//     Line::default()
+// }
 
-pub fn part_two(input: &str) -> Option<usize> {
-    let lines = input.lines().map(parse).collect_vec();
+pub fn part_two(_input: &str) -> Option<usize> {
+    // let lines = input.lines().map(parse).collect_vec();
     // l1 = 19, 13, 30 @ -2,  1, -2
     // l2 = 18, 19, 22 @ -1, -1, -2
     // 20, 25, 34 @ -2, -2, -4
@@ -125,7 +124,7 @@ pub fn part_two(input: &str) -> Option<usize> {
     //     pq.0 * v.1 - v.0 * pq.1,
     // );
 
-    // None
+    None
 }
 
 #[cfg(test)]

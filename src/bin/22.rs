@@ -1,6 +1,6 @@
 use itertools::Itertools;
-use ndarray::{s, Array2, Array3, Axis};
-use std::{collections::HashMap, ops::Range};
+use ndarray::{s, Array2};
+use std::ops::Range;
 use tuple::Map;
 
 advent_of_code::solution!(22);
