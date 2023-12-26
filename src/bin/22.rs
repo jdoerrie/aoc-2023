@@ -37,7 +37,7 @@ pub fn part_one(input: &str) -> Option<usize> {
             .unique();
         adj[i].extend(touching);
         slice.fill((rng[2].end - rng[2].start + max_depth, Some(i)));
-        println!("Block: {:?}, Final Depth: {max_depth}", (i, rng));
+        // println!("Block: {:?}, Final Depth: {max_depth}", (i, rng));
     }
 
     Some(

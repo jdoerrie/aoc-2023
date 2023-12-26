@@ -170,7 +170,7 @@ pub fn part_two(input: &str) -> Option<usize> {
                 }
 
                 if *next == rx_in && in_pulse == High {
-                    println!("{cnt}: Sending {:?} from {mdl} to {next}", in_pulse);
+                    // println!("{cnt}: Sending {:?} from {mdl} to {next}", in_pulse);
                     first_highs.entry(mdl).or_insert(cnt);
                     if first_highs.len() == inputs.get(rx_in).unwrap().len() {
                         found = true;
