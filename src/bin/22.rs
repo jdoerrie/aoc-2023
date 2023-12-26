@@ -1,11 +1,14 @@
 use itertools::Itertools;
-use ndarray::{s, Array3, Axis};
+use ndarray::{s, Array2, Array3, Axis};
+use std::{collections::HashMap, ops::Range};
 use tuple::Map;
 
 advent_of_code::solution!(22);
 
-fn parse(input: &str) -> Array3<usize> {
-    let ranges = input
+type Range3 = [Range<usize>; 3];
+
+fn parse(input: &str) -> Vec<Range3> {
+    input
         .lines()
         .map(|l| {
             let (lhs, rhs) = l.split_once('~').unwrap().map(|s| {
@@ -16,38 +19,85 @@ fn parse(input: &str) -> Array3<usize> {
 
             [lhs[0]..rhs[0] + 1, lhs[1]..rhs[1] + 1, lhs[2]..rhs[2] + 1]
         })
-        .collect_vec();
+        .collect()
+}
 
-    let maxs = ranges.iter().cloned().fold([0; 3], |[x, y, z], [i, j, k]| {
-        [x.max(i.end), y.max(j.end), z.max(k.end)]
-    });
+pub fn part_one(input: &str) -> Option<usize> {
+    let mut ranges = parse(input);
+    ranges.sort_by(|x, y| x[2].start.cmp(&y[2].start));
 
-    let mut space = ndarray::Array::zeros(maxs);
-    for (i, [x, y, z]) in ranges.into_iter().enumerate() {
-        space.slice_mut(s![x, y, z]).fill(i + 1);
+    let mut adj = vec![vec![]; ranges.len()];
+    let mut depth_map = Array2::from_elem((10, 10), (1, None));
+    for (i, rng) in ranges.iter().enumerate() {
+        let mut slice = depth_map.slice_mut(s![rng[0].clone(), rng[1].clone()]);
+        let max_depth = slice.iter().max().unwrap().0;
+        let touching = slice
+            .iter()
+            .filter_map(|(dep, block)| if *dep == max_depth { *block } else { None })
+            .unique();
+        adj[i].extend(touching);
+        slice.fill((rng[2].end - rng[2].start + max_depth, Some(i)));
+        println!("Block: {:?}, Final Depth: {max_depth}", (i, rng));
     }
 
-    space
+    Some(
+        ranges.len()
+            - adj
+                .iter()
+                .filter_map(|v| if v.len() == 1 { Some(v[0]) } else { None })
+                .unique()
+                .count(),
+    )
 }
 
-fn fall_sand(blocks: &Array3<usize>) -> Array3<usize> {
-    let mut res = Array3::zeros(blocks.raw_dim());
-    for xy in blocks.axis_iter(Axis(2)) {
-        println!("{:?}", xy);
+fn get_final_depths(ranges: &[Option<Range3>]) -> Vec<Option<usize>> {
+    let mut map = vec![];
+    let mut depth_map = Array2::from_elem((10, 10), 1);
+    for rng in ranges {
+        if rng.is_none() {
+            map.push(None);
+            continue;
+        }
+
+        let [x_rng, y_rng, z_rng] = rng.clone().unwrap();
+        let mut slice = depth_map.slice_mut(s![x_rng, y_rng]);
+        let max_depth = *slice.iter().max().unwrap();
+        slice.fill(z_rng.end - z_rng.start + max_depth);
+        map.push(Some(max_depth));
     }
 
-    res
+    map
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
-    let space = parse(input);
-    println!("{:?}", space);
-    fall_sand(&space);
-    None
-}
+pub fn part_two(input: &str) -> Option<usize> {
+    let mut ranges = parse(input);
+    ranges.sort_by(|x, y| x[2].start.cmp(&y[2].start));
+    let mut opt_ranges = ranges.iter().map(|rng| Some(rng.clone())).collect_vec();
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut diffs = vec![];
+    let orig_depths = get_final_depths(&opt_ranges);
+    for i in 0..opt_ranges.len() {
+        let orig = opt_ranges[i].clone();
+        opt_ranges[i] = None;
+        let depth = get_final_depths(&opt_ranges);
+        opt_ranges[i] = orig;
+
+        diffs.push(
+            orig_depths
+                .iter()
+                .zip(depth)
+                .filter(|(x, y)| {
+                    if x.is_none() || y.is_none() {
+                        false
+                    } else {
+                        x.unwrap() != y.unwrap()
+                    }
+                })
+                .count(),
+        );
+    }
+
+    Some(diffs.iter().sum())
 }
 
 #[cfg(test)]
@@ -57,12 +107,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(5));
     }
 
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(7));
     }
 }
